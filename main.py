@@ -21,9 +21,43 @@ async def test(ctx, arg):
     await ctx.send(arg)
 
 
+'''
+commands.Greedy: https://discordpy.readthedocs.io/en/latest/ext/commands/api.html#discord.ext.commands.Greedy
+
+async def foo(ctx, arg1, arg2, *args):
+    ...
+
+# Invoking "?foo one two three four" will have
+# arg1 = 'one'
+# arg2 = 'two'
+# args = ('three', 'four')
+
+async def bar(ctx, arg1, arg2, *, args):
+    ...
+
+# Invoking "?bar one two three four" will have
+# arg1 = 'one'
+# arg2 = 'two'
+# args = 'three four'
+'''
 @bot.command()
-async def move(ctx, member: discord.Member, ch: discord.VoiceChannel):
-    await member.move_to(ch)
+async def move(ctx, members: commands.Greedy[discord.Member], *, ch: discord.VoiceChannel):
+    for member in members:
+        await member.move_to(ch)
+
+
+@bot.command()
+async def muteall(ctx):
+    vc = ctx.author.voice.channel
+    for member in vc.members:
+        await member.edit(mute=True)
+
+
+@bot.command()
+async def unmuteall(ctx):
+    vc = ctx.author.voice.channel
+    for member in vc.members:
+        await member.edit(mute=False)
 
 
 @bot.command(pass_context=True)
@@ -42,6 +76,7 @@ async def removerole(ctx, user: discord.Member, role: discord.Role):
         await ctx.send(f"{user.name} has had role {role.name} removed")
     except Exception as e:
         await ctx.send("There was an error running this command: " + str(e))
+
 
 # event listener for when the bot has switched from offline to online
 @bot.event
