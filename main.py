@@ -10,39 +10,49 @@ intents = discord.Intents.default()
 intents.members = True
 load_dotenv()
 
-MEMBER_DATA_FILE = 'memberData.json'
+DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+MEMBER_DATA_FILE = os.getenv("MEMBER_DATA_FILE")
+
 memberData = {}
 with open(MEMBER_DATA_FILE, 'r') as memberDataFile:
     memberData = json.load(memberDataFile)
 
-# leadershipList = memberData.get("Leadership")
-# membersList = memberData.get("Members")
-# grab the API token from the .env file
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+# cache existing roster members
+setOfDisplayNames = set()
+for role in memberData.keys():
+    for member in memberData[role]:
+        setOfDisplayNames.add(member["Nickname"])
+
+
 
 # Gets the client object from discord.py. Client is synonymous with bot
-# bot = discord.Client()
 bot = commands.Bot(command_prefix='!', intents=intents)
 
 
 @bot.command()
+@commands.has_role("Mods")
 async def addtoroster(ctx, member: discord.Member, role):
     memberNickname = member.display_name
-    splitName = memberNickname.split("(")
-    memberFirstName = splitName[0]
-    listData = memberData.get(role.title())
+    if memberNickname not in setOfDisplayNames:
+        setOfDisplayNames.add(memberNickname)
+        splitName = memberNickname.split("(")
+        memberFirstName = splitName[0]
+        listData = memberData.get(role.title())
 
-    newMemberDictData = {}
-    newMemberDictData['Nickname'] = memberNickname
-    newMemberDictData['Name'] = memberFirstName
+        newMemberDictData = {}
+        newMemberDictData['Nickname'] = memberNickname
+        newMemberDictData['Name'] = memberFirstName
 
-    listData.append(newMemberDictData)
+        listData.append(newMemberDictData)
 
-    memberData[role.title()] = listData
+        memberData[role.title()] = listData
 
-    with open(MEMBER_DATA_FILE, 'w') as updatedMemberDataFile:
-        jsonData = json.dumps(memberData)
-        updatedMemberDataFile.write(jsonData)
+        with open(MEMBER_DATA_FILE, 'w') as updatedMemberDataFile:
+            jsonData = json.dumps(memberData)
+            updatedMemberDataFile.write(jsonData)
+        await ctx.send("This person has been successfully added to the roster!")
+    else:
+        await ctx.send("This person is already in the roster!")
 
 
 @bot.command()
