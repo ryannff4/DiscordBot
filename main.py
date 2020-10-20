@@ -1,6 +1,8 @@
 # Import discord.py. Allows access to discord's API
 import discord
 import os
+import json
+import pprint
 from dotenv import load_dotenv
 from discord.ext import commands
 
@@ -8,6 +10,13 @@ intents = discord.Intents.default()
 intents.members = True
 load_dotenv()
 
+MEMBER_DATA_FILE = 'memberData.json'
+memberData = {}
+with open(MEMBER_DATA_FILE, 'r') as memberDataFile:
+    memberData = json.load(memberDataFile)
+
+# leadershipList = memberData.get("Leadership")
+# membersList = memberData.get("Members")
 # grab the API token from the .env file
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 
@@ -17,9 +26,33 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 
 
 @bot.command()
-async def test(ctx, arg):
-    await ctx.send(arg)
+async def addtoroster(ctx, member: discord.Member, role):
+    memberNickname = member.display_name
+    splitName = memberNickname.split("(")
+    memberFirstName = splitName[0]
+    listData = memberData.get(role.title())
 
+    newMemberDictData = {}
+    newMemberDictData['Nickname'] = memberNickname
+    newMemberDictData['Name'] = memberFirstName
+
+    listData.append(newMemberDictData)
+
+    memberData[role.title()] = listData
+
+    with open(MEMBER_DATA_FILE, 'w') as updatedMemberDataFile:
+        jsonData = json.dumps(memberData)
+        updatedMemberDataFile.write(jsonData)
+
+
+@bot.command()
+async def showroster(ctx):
+    outputString = ""
+    for k in memberData.keys():
+        outputString = outputString + k + ":\n"
+        for v in memberData[k]:
+            outputString = outputString + "\t" + v["Name"] + "\n"
+    await ctx.send(outputString)
 
 '''
 commands.Greedy: https://discordpy.readthedocs.io/en/latest/ext/commands/api.html#discord.ext.commands.Greedy
