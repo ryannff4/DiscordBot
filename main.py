@@ -18,10 +18,10 @@ with open(MEMBER_DATA_FILE, 'r') as memberDataFile:
     memberData = json.load(memberDataFile)
 
 # cache existing roster members
-setOfDisplayNames = set()
+setOfMemberIds = set()
 for role in memberData.keys():
     for member in memberData[role]:
-        setOfDisplayNames.add(member["Nickname"])
+        setOfMemberIds.add(member["ID"])
 
 
 
@@ -32,9 +32,10 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 @bot.command()
 @commands.has_role("Mods")
 async def addtoroster(ctx, member: discord.Member, role):
+    memberId = member.id
     memberNickname = member.display_name
-    if memberNickname not in setOfDisplayNames:
-        setOfDisplayNames.add(memberNickname)
+    if memberId not in setOfMemberIds:
+        setOfMemberIds.add(memberId)
         splitName = memberNickname.split("(")
         memberFirstName = splitName[0]
         listData = memberData.get(role.title())
@@ -42,6 +43,7 @@ async def addtoroster(ctx, member: discord.Member, role):
         newMemberDictData = {}
         newMemberDictData['Nickname'] = memberNickname
         newMemberDictData['Name'] = memberFirstName
+        newMemberDictData['ID'] = memberId
 
         listData.append(newMemberDictData)
 
