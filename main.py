@@ -19,14 +19,29 @@ with open(MEMBER_DATA_FILE, 'r') as memberDataFile:
 
 # cache existing roster members
 setOfMemberIds = set()
+outputString = ""
 for role in memberData.keys():
-    for member in memberData[role]:
-        setOfMemberIds.add(member["ID"])
-
-
+    outputString = outputString + role + ":\n"
+    for i in range(len(memberData[role])):
+        member = memberData[role][i]
+        memberName = member["Name"]
+        memberId = member["ID"]
+        outputString = outputString + "\t" + memberName + "\n"
+        setOfMemberIds.add(memberId)
 
 # Gets the client object from discord.py. Client is synonymous with bot
 bot = commands.Bot(command_prefix='!', intents=intents)
+
+#example command is !setnickname S.Storm Ryan
+@bot.command()
+# @commands.has_role("Mods")
+async def setnickname(ctx, member: discord.Member, nickname):
+    name = str(member)
+    nameSplit = name.split("#") # get without discriminator
+    username = nameSplit[0]
+    discordNickname = nickname + "(" + username + ")"
+    await ctx.send("Setting nickname to " + discordNickname)
+    await member.edit(nick=discordNickname)
 
 
 @bot.command()
@@ -59,11 +74,6 @@ async def addtoroster(ctx, member: discord.Member, role):
 
 @bot.command()
 async def showroster(ctx):
-    outputString = ""
-    for k in memberData.keys():
-        outputString = outputString + k + ":\n"
-        for v in memberData[k]:
-            outputString = outputString + "\t" + v["Name"] + "\n"
     await ctx.send(outputString)
 
 '''
